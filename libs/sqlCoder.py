@@ -15,7 +15,6 @@ def initTable(dbPath: str = 'data/pluginsInfoDB.db') -> None:
     con = sqlite3.connect(dbPath)
     cur = con.cursor()
     # Init sqlite table
-    cur.execute(r"DROP TABLE plugins")
     cur.execute(r"""
     CREATE TABLE IF NOT EXISTS plugins (
         name TEXT,
