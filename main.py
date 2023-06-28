@@ -2,6 +2,7 @@
 from __future__ import annotations
 from rich.console import Console
 from rich.tree import Tree
+from rich.table import Table
 from libs.commandManager import *
 import libs.commandManager as commandManager
 import libs.errors as err
@@ -32,7 +33,7 @@ LVL3 = "[yellow]>>>[/]"
 
 DEVELOPERS_LIST = ['TheHakerTech', 'An72ty']
 
-libs = {'errors':err, 'sqlCoder':sql, 'commandManager':commandManager}
+libs = {'errors': err, 'sqlCoder': sql, 'commandManager': commandManager}
 # Commands names consts
 HELP = 'help'
 RESTART = 'restart'
@@ -47,6 +48,7 @@ PLUGIN_TOOLS = 'Plugin tools'
 
 # Create console object
 console = Console()
+
 
 def printLogo():
     console.print('[cyan]Eternal Arts | All rights reserved[/]')
@@ -81,7 +83,6 @@ class App(AppData):
         # Plugins list
         self.plugins = {t[0]: (t[1], t[2]) for t in sql.getPluginsList()}
         self.activatedPlugins = {}
-
 
     def addCommands(self) -> None:
         AppData.groups.addGroup(
@@ -127,7 +128,6 @@ class App(AppData):
             time.sleep(1)
             sql.updateDB()
             self.plugins = {t[0]: (t[1], t[2]) for t in sql.getPluginsList()}
-            
 
     def start(self) -> None:
         err.Functions.debug('App started')
@@ -138,7 +138,8 @@ class App(AppData):
         self.updatingThread.start()
         # Prints
         printLogo()
-        console.print('[white]Welcome to[/] [cyan]ITTOOLS[/][white]! Type command which you need (words register in nan)[/]')
+        console.print(
+            '[white]Welcome to[/] [cyan]ITTOOLS[/][white]! Type command which you need (words register in nan)[/]')
         AppData.groups.print()
         while True:
             console.print(LVL1, end=' ')
@@ -193,6 +194,12 @@ class App(AppData):
                 err.Functions.error('You have to answer y or n')
 
     def pinfo(self) -> None:
+        plugins_table = Table(
+            title='[cyan]Your installed plugins[/]', expand=True)
+        plugins_table.add_column('Name', style="white")
+        plugins_table.add_column('Version', style="magenta")
+        plugins_table.add_column('Status', style="blue")
+
         console.print(
             '[white]Type plugin name which info you need. (e - cancel)[/]')
         console.print(
@@ -204,15 +211,20 @@ class App(AppData):
             if answer in plugins.keys():
                 console.print("{0} v{1} - {2}".format(answer,
                               plugins[answer][0], plugins[answer][1]))
+                plugins_table.add_row(
+                    answer, plugins[answer][0], plugins[answer][1])
+                console.print(plugins_table)
+
                 break
 
             elif answer == ALL:
-                console.print('[white]Your installed plugins:[/]')
+
                 plugins = sql.getPluginsList()
                 if plugins:
                     for (name, version, status) in plugins:
-                        console.print(
-                            "[white]{0}[/] [cyan]v[/][white]{1}[/] [cyan]status:[/] {2}".format(name, version, status))
+                        plugins_table.add_row(name, version, status)
+
+                    console.print(plugins_table)
                 else:
                     console.print('[white]You have not installed plugins![/]')
                 break
@@ -244,7 +256,8 @@ class App(AppData):
                 console.print(
                     f'[white]Plugin[/] [cyan]{answer}[/] [white]activated[/]')
                 # Activate plugin
-                pluginModule = importlib.import_module(f'plugins.{answer}.plugin')
+                pluginModule = importlib.import_module(
+                    f'plugins.{answer}.plugin')
                 pluginModule.init(AppData)
                 m = []
                 for name in pluginModule.modulesNames:
@@ -264,7 +277,8 @@ class App(AppData):
                     with open(f'plugins/{name}/info.json', 'w') as f:
                         f.write(json.dumps(pinfo))
                     # Activate plugin
-                    pluginModule = importlib.import_module(f'plugins.{name}.plugin')
+                    pluginModule = importlib.import_module(
+                        f'plugins.{name}.plugin')
                     pluginModule.init(AppData)
                     m = []
                     for name in pluginModule.modulesNames:
@@ -296,7 +310,8 @@ class App(AppData):
             answer = input()
             if answer in plugins.keys():
                 if answer in self.activatedPlugins.keys():
-                    pinfo = json.loads(open(f'plugins/{answer}/info.json').read())
+                    pinfo = json.loads(
+                        open(f'plugins/{answer}/info.json').read())
                     pinfo['status'] = 'no'
                     with open(f'plugins/{answer}/info.json', 'w') as f:
                         f.write(json.dumps(pinfo))
@@ -305,9 +320,10 @@ class App(AppData):
                     console.print(
                         f'[white]Plugin[/] [cyan]{answer}[/] [white]deactivated[/]')
                     self.update()
-                    
+
                 else:
-                    console.print('[white]This plugin is already deactivated![/]')
+                    console.print(
+                        '[white]This plugin is already deactivated![/]')
                 break
 
             elif answer == ALL:
@@ -348,7 +364,7 @@ class App(AppData):
 
     def credits(self) -> None:
         developer_tree = Tree(
-            '[cyan]ITTOOLS[/cyan] [white]developers:[/white]')
+            '[cyan]ITTOOLS[/cyan] [white]developers[/white]')
         for developer in DEVELOPERS_LIST:
             developer_tree.add(f'[blue]{developer}[/blue]')
 
@@ -356,7 +372,7 @@ class App(AppData):
 
 
 def startApp():
-    #os.system('cls||clear')
+    # os.system('cls||clear')
     app = App()  # Create obj
     try:
         app.start()  # Start app
