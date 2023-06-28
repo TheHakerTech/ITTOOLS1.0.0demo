@@ -3,6 +3,7 @@ from rich.console import Console
 # Create globals
 AppData = None
 console = Console()
+NAME = 'errors'
 # Init fuction init AppData
 def init(data):
     global AppData

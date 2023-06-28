@@ -5,7 +5,7 @@ import os
 import json
 from libs.version import compareVersions
 AppData = None
-
+NAME = 'sqlCoder'
 
 def isPluginCorrect(path):
     return os.path.exists(path+'/info.json') and os.path.exists(path+'/plugin.py')

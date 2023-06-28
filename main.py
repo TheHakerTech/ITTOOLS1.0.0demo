@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-from typing import Callable
 from rich.console import Console
 from rich.tree import Tree
+from libs.commandManager import *
+import libs.commandManager as commandManager
 import libs.errors as err
+import plugins.installer.plugin as installer
 import libs.sqlCoder as sql
 import threading
 import time
 import json
+import importlib
 import os
 
 # Consts
@@ -28,6 +31,8 @@ LVL2 = "[green]>>[/]"
 LVL3 = "[yellow]>>>[/]"
 
 DEVELOPERS_LIST = ['TheHakerTech', 'An72ty']
+
+libs = {'errors':err, 'sqlCoder':sql, 'commandManager':commandManager}
 # Commands names consts
 HELP = 'help'
 RESTART = 'restart'
@@ -43,91 +48,11 @@ PLUGIN_TOOLS = 'Plugin tools'
 # Create console object
 console = Console()
 
-
-class TextInfo:
-    def __init__(
-        self,
-        name: str,
-        description: str,
-        detailDescription: str = None
-    ) -> TextInfo:
-        # Init attributes
-        self.name = name
-        self.description = description
-        # If detail is None, detail is description
-        self.detailDescription = detailDescription or description
-
-
-class Groups:
-    def __init__(
-        self,
-        list: list = []
-    ) -> Groups:
-        self.list = {group.name: group for group in list}
-        self.commands = {}
-        for group in self.list.values():
-            self.commands.update(group.list)
-
-    def update(self) -> None:
-        self.commands = {}
-        for group in self.list.values():
-            self.commands.update(group.list)
-
-    def addGroup(self, group) -> None:
-        self.list[group.name] = group
-        self.update()
-
-    def print(self) -> None:
-        for (groupName, group) in self.list.items():
-            console.print('[bold white]{0}[/]'.format(groupName))
-            group.print()
-
-
-class Group(TextInfo):
-    def __init__(
-        self,
-        name: str,
-        description: str,
-        list: list = [],
-        detailDescription: str = None
-    ) -> Group:
-        super().__init__(name, description, detailDescription)
-        self.list = {command.name: command for command in list}
-
-    def addCommand(self, args) -> None:
-        for command in args:
-            self.list[command.name] = command
-
-    def print(self) -> None:
-        for (commandName, command) in self.list.items():
-            console.print(
-                '[cyan]{0}[/] [white]- {1}[/]'.format(commandName, command.description))
-
-
-class Command(TextInfo):
-    def __init__(
-        self,
-        name: str,
-        function: Callable,
-        description: str,
-        detailDescription: str = None
-    ) -> None:
-        super().__init__(name, description, detailDescription)
-        self.function = function
-
-    def print(self) -> None:
-        console.print(
-            '[cyan]{0}[/] [white]- {1}[/]'.format(self.name, self.detailDescription))
-
-    def invoke(self) -> None:
-        self.function()
-
-
 def printLogo():
     console.print('[cyan]Eternal Arts | All rights reserved[/]')
-    console.print('[white]=======================================[/]')
+    console.print('[white]==============================================[/]')
     console.print(LOGO)
-    console.print('[white]=======================================[/]')
+    console.print('[white]==============================================[/]')
 
 
 class AppData:
@@ -137,8 +62,9 @@ class AppData:
 
 
 # Init AppData in libs
-err.init(AppData)
-sql.init(AppData)
+libs['errors'].init(AppData)
+libs['sqlCoder'].init(AppData)
+libs['commandManager'].init(AppData)
 
 
 class App(AppData):
@@ -152,34 +78,56 @@ class App(AppData):
         self.startCode = startCode
         # Add commands
         self.addCommands()
+        # Plugins list
+        self.plugins = {t[0]: (t[1], t[2]) for t in sql.getPluginsList()}
+        self.activatedPlugins = {}
 
-    def addCommands(self) -> None:
-        AppData.groups.addGroup(
-            Group('System tools', 'System functions', list=[
-                Command(HELP, self.help, 'Show info about commands'),
-
-            ]
-            )
-        )
 
     def addCommands(self) -> None:
         AppData.groups.addGroup(
             Group('System tools', 'System functions', list=[
                 Command(HELP, self.help, 'Show info about commands'),
                 Command(RESTART, self.restart, 'Restart the programm'),
+                Command(CREDITS, self.credits, 'Shows developers nicknames'),
+                Command(EXIT, self.exit, 'Exit'),
+            ])
+        )
+        AppData.groups.addGroup(
+            Group('Plugin tools', 'Tools for plugins', list=[
                 Command(PINFO, self.pinfo, 'Show info about plugin'),
                 Command(ACTIVATE, self.activate, 'Activate plugin'),
-                Command(DEACTIVATE, self.deactivate, 'Activate plugin'),
-                Command(EXIT, self.exit, 'Exit'),
-                Command(CREDITS, self.credits, 'Shows developers nicknames')
-            ]
-            )
+                Command(DEACTIVATE, self.deactivate, 'Activate plugin')
+            ])
         )
+
+    def update(self) -> None:
+        self.activatedPlugins = {}
+        # Get activated plugin list
+        activatedPluginsNames = []
+        for (name, info) in self.plugins.items():
+            if info[1] == 'yes':
+                activatedPluginsNames.append(name)
+        # Activate plugins
+        for pname in activatedPluginsNames:
+            pluginModule = importlib.import_module(f'plugins.{pname}.plugin')
+            pluginModule.init(AppData)
+            m = []
+            for name in pluginModule.modulesNames:
+                if name in libs.keys():
+                    m.append(libs[name])
+
+            self.p = pluginModule.p(AppData, m)
+            self.activatedPlugins[pluginModule.NAME] = self.p
+            self.p.activate()
+        AppData.groups.clear()
+        self.addCommands()
 
     def updating(self) -> None:
         while self.isUpdating:
             time.sleep(1)
             sql.updateDB()
+            self.plugins = {t[0]: (t[1], t[2]) for t in sql.getPluginsList()}
+            
 
     def start(self) -> None:
         err.Functions.debug('App started')
@@ -190,8 +138,7 @@ class App(AppData):
         self.updatingThread.start()
         # Prints
         printLogo()
-        console.print(
-            '[white]Welcome to[/] [cyan]ITTOOLS[/][white]! Type command which you need (words register in nan)[/]')
+        console.print('[white]Welcome to[/] [cyan]ITTOOLS[/][white]! Type command which you need (words register in nan)[/]')
         AppData.groups.print()
         while True:
             console.print(LVL1, end=' ')
@@ -284,27 +231,50 @@ class App(AppData):
             '[white]Type plugin name which you need to activate. (e - cancel)[/]')
         console.print(
             '[white]Or type[/] [green]*[/] [white]to activate all plugins.[/]')
-        plugins = {t[0]: (t[1], t[2]) for t in sql.getPluginsList()}
+        self.plugins = {t[0]: (t[1], t[2]) for t in sql.getPluginsList()}
         while True:
             console.print(LVL2, end=' ')
             answer = input()
-            if answer in plugins.keys():
+            if answer in self.plugins.keys():
+                # Write that plugin activated
                 pinfo = json.loads(open(f'plugins/{answer}/info.json').read())
                 pinfo['status'] = 'yes'
                 with open(f'plugins/{answer}/info.json', 'w') as f:
                     f.write(json.dumps(pinfo))
                 console.print(
                     f'[white]Plugin[/] [cyan]{answer}[/] [white]activated[/]')
+                # Activate plugin
+                pluginModule = importlib.import_module(f'plugins.{answer}.plugin')
+                pluginModule.init(AppData)
+                m = []
+                for name in pluginModule.modulesNames:
+                    if name in libs.keys():
+                        m.append(libs[name])
+
+                self.p = pluginModule.p(AppData, m)
+                self.activatedPlugins[pluginModule.NAME] = self.p
+                self.p.activate()
                 break
 
             elif answer == ALL:
-                for (name, info) in plugins.items():
+                for (name, info) in self.plugins.items():
                     pinfo = json.loads(
                         open(f'plugins/{name}/info.json').read())
                     pinfo['status'] = 'yes'
                     with open(f'plugins/{name}/info.json', 'w') as f:
                         f.write(json.dumps(pinfo))
-                    console.print('[green]Succes[/]')
+                    # Activate plugin
+                    pluginModule = importlib.import_module(f'plugins.{name}.plugin')
+                    pluginModule.init(AppData)
+                    m = []
+                    for name in pluginModule.modulesNames:
+                        if name in libs.keys():
+                            m.append(libs[name])
+                    self.p = pluginModule.p(AppData, m)
+                    self.activatedPlugins[pluginModule.NAME] = self.p
+                    self.p.activate()
+                    self.update()
+                console.print('[green]Succes[/]')
                 break
 
             elif answer == E:
@@ -325,12 +295,19 @@ class App(AppData):
             console.print(LVL2, end=' ')
             answer = input()
             if answer in plugins.keys():
-                pinfo = json.loads(open(f'plugins/{answer}/info.json').read())
-                pinfo['status'] = 'no'
-                with open(f'plugins/{answer}/info.json', 'w') as f:
-                    f.write(json.dumps(pinfo))
-                console.print(
-                    f'[white]Plugin[/] [cyan]{answer}[/] [white]deactivated[/]')
+                if answer in self.activatedPlugins.keys():
+                    pinfo = json.loads(open(f'plugins/{answer}/info.json').read())
+                    pinfo['status'] = 'no'
+                    with open(f'plugins/{answer}/info.json', 'w') as f:
+                        f.write(json.dumps(pinfo))
+                    # Deactivate
+                    del self.activatedPlugins[answer]
+                    console.print(
+                        f'[white]Plugin[/] [cyan]{answer}[/] [white]deactivated[/]')
+                    self.update()
+                    
+                else:
+                    console.print('[white]This plugin is already deactivated![/]')
                 break
 
             elif answer == ALL:
@@ -340,7 +317,10 @@ class App(AppData):
                     pinfo['status'] = 'no'
                     with open(f'plugins/{name}/info.json', 'w') as f:
                         f.write(json.dumps(pinfo))
-                    console.print('[green]Succes[/]')
+                    # Deactivate
+                    del self.activatedPlugins[name]
+                    self.update()
+                console.print('[green]Succes[/]')
                 break
 
             elif answer == E:
@@ -376,7 +356,7 @@ class App(AppData):
 
 
 def startApp():
-    os.system('cls||clear')
+    #os.system('cls||clear')
     app = App()  # Create obj
     try:
         app.start()  # Start app
