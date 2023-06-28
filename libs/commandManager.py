@@ -71,7 +71,7 @@ class Group(TextInfo):
             self.list[command.name] = command
 
     def print(self) -> None:
-        group_tree = Tree(self.name)
+        group_tree = Tree(f"[blue]{self.name}[/blue]")
         for (commandName, command) in self.list.items():
             group_tree.add(
                 '[cyan]{0}[/] [white]- {1}[/]'.format(commandName, command.description))
