@@ -1,13 +1,17 @@
 from __future__ import annotations
 from typing import Callable
 from rich.console import Console
+from rich.tree import Tree
 
 AppData = None
 console = Console()
 NAME = 'commandManager'
+
+
 def init(data):
     global AppData
     AppData = data
+
 
 class TextInfo:
     def __init__(
@@ -44,7 +48,6 @@ class Groups:
 
     def print(self) -> None:
         for (groupName, group) in self.list.items():
-            console.print('[bold white]{0}[/]'.format(groupName))
             group.print()
 
     def clear(self) -> None:
@@ -68,9 +71,12 @@ class Group(TextInfo):
             self.list[command.name] = command
 
     def print(self) -> None:
+        group_tree = Tree(self.name)
         for (commandName, command) in self.list.items():
-            console.print(
+            group_tree.add(
                 '[cyan]{0}[/] [white]- {1}[/]'.format(commandName, command.description))
+
+        console.print(group_tree)
 
 
 class Command(TextInfo):
