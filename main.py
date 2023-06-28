@@ -2,6 +2,7 @@
 from __future__ import annotations
 from typing import Callable
 from rich.console import Console
+from rich.tree import Tree
 import libs.errors as err
 import libs.sqlCoder as sql
 import threading
@@ -352,9 +353,11 @@ class App(AppData):
                 err.Functions.error('You have to answer y or n')
 
     def credits(self) -> None:
-        console.print('[cyan]ITTOOLS[/cyan] [white]developers:[/white]')
+        developer_tree = Tree('[cyan]ITTOOLS[/cyan] [white]developers:[/white]')
         for developer in DEVELOPERS_LIST:
-            console.print(f'\t[blue]{developer}[/blue]')
+            developer_tree.add(f'[blue]{developer}[/blue]')
+
+        console.print(developer_tree)
 
 
 def startApp():
