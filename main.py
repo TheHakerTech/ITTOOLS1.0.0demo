@@ -15,7 +15,7 @@ LOGO = """[cyan]
 ██ ██████ ██████ ███████ ███████ ██
 ██   ██     ██   ██   ██ ██   ██ ██
 ██   ██     ██   ██   ██ ██   ██ ██
-██   ██     ██   ███████ ███████ ██████[/]
+██   ██     ██   ███████ ███████ █████[/]
 """
 CENTER = "center"
 LEFT = "left"
@@ -157,7 +157,20 @@ class App(AppData):
         AppData.groups.addGroup(
             Group('System tools', 'System functions', list=[
                 Command(HELP, self.help, 'Show info about commands'),
-                Command(CREDITS, self.credits, 'Shows developers nicknames')
+
+            ]
+            )
+        )
+
+    def addCommands(self) -> None:
+        AppData.groups.addGroup(
+            Group('System tools', 'System functions', list=[
+                Command(HELP, self.help, 'Show info about commands'),
+                Command(RESTART, self.restart, 'Restart the programm'),
+                Command(PINFO, self.pinfo, 'Show info about plugin'),
+                Command(ACTIVATE, self.activate, 'Activate plugin'),
+                Command(DEACTIVATE, self.deactivate, 'Activate plugin'),
+                Command(EXIT, self.exit, 'Exit')
             ]
             )
         )
@@ -353,7 +366,8 @@ class App(AppData):
                 err.Functions.error('You have to answer y or n')
 
     def credits(self) -> None:
-        developer_tree = Tree('[cyan]ITTOOLS[/cyan] [white]developers:[/white]')
+        developer_tree = Tree(
+            '[cyan]ITTOOLS[/cyan] [white]developers:[/white]')
         for developer in DEVELOPERS_LIST:
             developer_tree.add(f'[blue]{developer}[/blue]')
 
