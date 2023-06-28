@@ -170,7 +170,8 @@ class App(AppData):
                 Command(PINFO, self.pinfo, 'Show info about plugin'),
                 Command(ACTIVATE, self.activate, 'Activate plugin'),
                 Command(DEACTIVATE, self.deactivate, 'Activate plugin'),
-                Command(EXIT, self.exit, 'Exit')
+                Command(EXIT, self.exit, 'Exit'),
+                Command(CREDITS, self.credits, 'Shows developers nicknames')
             ]
             )
         )
