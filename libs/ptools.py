@@ -1,5 +1,8 @@
 # -*- codinbg: utf-8 -*-
 from __future__ import annotations
+
+PLUGIN_FILES = {'plugin.py':None, 'info.json':None, 'README.md':None}
+
 class Plugin:
     def __init__(
         self,

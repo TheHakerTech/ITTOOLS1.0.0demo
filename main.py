@@ -8,6 +8,7 @@ import libs.commandManager as commandManager
 import libs.errors as err
 import plugins.installer.plugin as installer
 import libs.sqlCoder as sql
+import libs.network as network
 import threading
 import time
 import json
@@ -33,7 +34,12 @@ LVL3 = "[yellow]>>>[/]"
 
 DEVELOPERS_LIST = ['TheHakerTech', 'An72ty']
 
-libs = {'errors': err, 'sqlCoder': sql, 'commandManager': commandManager}
+libs = {
+    'errors': err,
+    'sqlCoder': sql,
+    'commandManager': commandManager,
+    'network':network
+}
 # Commands names consts
 HELP = 'help'
 RESTART = 'restart'
@@ -61,12 +67,13 @@ class AppData:
     # Link to console
     console = console
     groups = Groups()
+    def AppDataInitLibs():
+        for (name, module) in libs.items():
+            module.init(AppData)
 
 
 # Init AppData in libs
-libs['errors'].init(AppData)
-libs['sqlCoder'].init(AppData)
-libs['commandManager'].init(AppData)
+AppData.AppDataInitLibs()
 
 
 class App(AppData):
