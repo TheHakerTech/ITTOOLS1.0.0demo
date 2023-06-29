@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 from rich.console import Console
+import requests
+import os.path
 # Import system ptools
 import libs.ptools as ptools
 # Create globals
@@ -17,6 +19,21 @@ def init(data):
 
 class NotAllModulesConnected(Exception): pass
 
+def download(url, path='plugins'):
+    if path == None:
+        response = requests.get(url)
+        open(filename, "wb").write(response.content)
+    else:
+        if os.path.exists(path):
+            if os.path.exists(f"{path}\{filename}"):
+                os.remove(f"{path}\{filename}")
+            response = requests.get(url)
+            open(filename, "wb").write(response.content)
+
+    filename = 
+
+    
+
 class p(ptools.Plugin):
     def __init__(
         self,
@@ -32,8 +49,17 @@ class p(ptools.Plugin):
         
     def activate(self) -> bool:
         self.errors.Functions.debug('Plugin {0} activated'.format(NAME))
+
         AppData.groups.list['System tools'].addCommand([self.commandManager.Command('test', self.download, 'test plugin')])
         AppData.groups.update()
 
-    def download(self):
+    def download(self) -> bool
         self.errors.Functions.debug('Invoked function download')
+
+        console.print('[white]Enter plugin name (e - cancel)')
+        while True:
+            console.print('[red]>[/] ', end='')
+            answer = input()
+            pluginName = "ittoolplugin."+answer
+
+        filename = 
