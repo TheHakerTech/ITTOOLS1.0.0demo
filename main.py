@@ -46,6 +46,7 @@ RESTART = 'restart'
 PINFO = 'pinfo'
 ACTIVATE = 'activate'
 DEACTIVATE = 'deactivate'
+REMOVE = 'remove'
 EXIT = 'exit'
 E = 'e'
 CREDITS = 'credits'
@@ -104,7 +105,8 @@ class App(AppData):
             Group('Plugin tools', 'Tools for plugins', list=[
                 Command(PINFO, self.pinfo, 'Show info about plugin'),
                 Command(ACTIVATE, self.activate, 'Activate plugin'),
-                Command(DEACTIVATE, self.deactivate, 'Activate plugin')
+                Command(DEACTIVATE, self.deactivate, 'Activate plugin'),
+                Command(REMOVE, self.remove, 'Remove plugin')
             ])
         )
 
@@ -203,9 +205,9 @@ class App(AppData):
     def pinfo(self) -> None:
         plugins_table = Table(
             title='[cyan]Your installed plugins[/]', expand=True)
-        plugins_table.add_column('Name', style="white")
-        plugins_table.add_column('Version', style="magenta")
-        plugins_table.add_column('Status', style="blue")
+        plugins_table.add_column('Name', style="white", width=10)
+        plugins_table.add_column('Version', style="magenta", width=10)
+        plugins_table.add_column('Status', style="blue", width=10)
 
         console.print(
             '[white]Type plugin name which info you need. (e - cancel)[/]')
@@ -248,8 +250,6 @@ class App(AppData):
     def activate(self) -> None:
         console.print(
             '[white]Type plugin name which you need to activate. (e - cancel)[/]')
-        console.print(
-            '[white]Or type[/] [green]*[/] [white]to activate all plugins.[/]')
         self.plugins = {t[0]: (t[1], t[2]) for t in sql.getPluginsList()}
         while True:
             console.print(LVL2, end=' ')
@@ -276,28 +276,6 @@ class App(AppData):
                 self.p.activate()
                 break
 
-            elif answer == ALL:
-                for (name, info) in self.plugins.items():
-                    pinfo = json.loads(
-                        open(f'plugins/{name}/info.json').read())
-                    pinfo['status'] = 'yes'
-                    with open(f'plugins/{name}/info.json', 'w') as f:
-                        f.write(json.dumps(pinfo))
-                    # Activate plugin
-                    pluginModule = importlib.import_module(
-                        f'plugins.{name}.plugin')
-                    pluginModule.init(AppData)
-                    m = []
-                    for name in pluginModule.modulesNames:
-                        if name in libs.keys():
-                            m.append(libs[name])
-                    self.p = pluginModule.p(AppData, m)
-                    self.activatedPlugins[pluginModule.NAME] = self.p
-                    self.p.activate()
-                    self.update()
-                console.print('[green]Succes[/]')
-                break
-
             elif answer == E:
                 err.Functions.debug('Cancelled operation')
                 console.print('You cancelled')
@@ -309,8 +287,6 @@ class App(AppData):
     def deactivate(self) -> None:
         console.print(
             '[white]Type plugin name which you need to deactivate. (e - cancel)[/]')
-        console.print(
-            '[white]Or type[/] [green]*[/] [white]to deactivate all plugins.[/]')
         plugins = {t[0]: (t[1], t[2]) for t in sql.getPluginsList()}
         while True:
             console.print(LVL2, end=' ')
@@ -333,19 +309,6 @@ class App(AppData):
                         '[white]This plugin is already deactivated![/]')
                 break
 
-            elif answer == ALL:
-                for (name, info) in plugins.items():
-                    pinfo = json.loads(
-                        open(f'plugins/{name}/info.json').read())
-                    pinfo['status'] = 'no'
-                    with open(f'plugins/{name}/info.json', 'w') as f:
-                        f.write(json.dumps(pinfo))
-                    # Deactivate
-                    del self.activatedPlugins[name]
-                    self.update()
-                console.print('[green]Succes[/]')
-                break
-
             elif answer == E:
                 err.Functions.debug('Cancelled operation')
                 console.print('You cancelled')
@@ -353,6 +316,23 @@ class App(AppData):
 
             else:
                 err.Functions.error('Unknow plugin name {0}'.format(answer))
+
+    def remove(self) -> None:
+        console.print('[white]Enter plugin name, which you need to remove[/] (e - cancel)')
+        while True:
+            console.print(LVL2, end='')
+            answer = input()
+            sql.updateDB()
+            if answer in self.plugins.keys():
+                # Remove dir
+                os.remove(f'plugins/{answer}')
+                console.print('[green]Succes removed[/] [red]{0}[/]'.format(self.plugins.pop(answer)))
+                break
+            elif answer.lower() == E:
+                console.print('You cancelled')
+                break
+            else:
+                console.print('[red]Unknow plugin name[/]')
 
     def exit(self) -> None:
         console.print('[white]Are you sure to exit? (y/n)[/]')
