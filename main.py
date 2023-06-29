@@ -7,6 +7,7 @@ from libs.commandManager import *
 import libs.commandManager as commandManager
 import libs.errors as err
 import plugins.installer.plugin as installer
+import shutil
 import libs.sqlCoder as sql
 import libs.network as network
 import threading
@@ -34,11 +35,13 @@ LVL3 = "[yellow]>>>[/]"
 
 DEVELOPERS_LIST = ['TheHakerTech', 'An72ty']
 
+COMMAND_INPUT = input().strip().lower()
+
 libs = {
     'errors': err,
     'sqlCoder': sql,
     'commandManager': commandManager,
-    'network':network
+    'network': network
 }
 # Commands names consts
 HELP = 'help'
@@ -68,6 +71,7 @@ class AppData:
     # Link to console
     console = console
     groups = Groups()
+
     def AppDataInitLibs():
         for (name, module) in libs.items():
             module.init(AppData)
@@ -152,7 +156,7 @@ class App(AppData):
         AppData.groups.print()
         while True:
             console.print(LVL1, end=' ')
-            answer = input()
+            answer = COMMAND_INPUT
             if answer.lower() in list(AppData.groups.commands.keys()):
                 AppData.groups.commands[answer.lower()].invoke()
             else:
@@ -169,7 +173,7 @@ class App(AppData):
             '[white]Or type[/] [green]*[/] [white]to get instruction of all commands.[/]')
         while True:
             console.print(LVL2, end=' ')
-            answer = input()
+            answer = COMMAND_INPUT
             if answer.lower() in list(AppData.groups.commands.keys()):
                 AppData.groups.commands[answer.lower()].print()
                 break
@@ -191,7 +195,7 @@ class App(AppData):
         console.print('[white]Are you sure to restart program? (y/n)[/]')
         while True:
             console.print(LVL2, end=' ')
-            answer = input()
+            answer = COMMAND_INPUT
             if answer.lower() == YES:
                 self.isUpdating = False
                 raise err.Restart()
@@ -318,15 +322,17 @@ class App(AppData):
                 err.Functions.error('Unknow plugin name {0}'.format(answer))
 
     def remove(self) -> None:
-        console.print('[white]Enter plugin name, which you need to remove[/] (e - cancel)')
+        console.print(
+            '[white]Enter plugin name, which you need to remove[/] (e - cancel)')
         while True:
             console.print(LVL2, end='')
             answer = input()
             sql.updateDB()
             if answer in self.plugins.keys():
                 # Remove dir
-                os.remove(f'plugins/{answer}')
-                console.print('[green]Succes removed[/] [red]{0}[/]'.format(self.plugins.pop(answer)))
+                shutil.rmtree(os.path.join('plugins', answer))
+                console.print(
+                    '[green]Succes removed[/] [red]{0}[/]'.format(self.plugins.pop(answer)))
                 break
             elif answer.lower() == E:
                 console.print('You cancelled')
@@ -338,7 +344,7 @@ class App(AppData):
         console.print('[white]Are you sure to exit? (y/n)[/]')
         while True:
             console.print(LVL2, end=' ')
-            answer = input()
+            answer = COMMAND_INPUT
             if answer.lower() == YES:
                 self.isUpdating = False
                 raise err.Exit()
