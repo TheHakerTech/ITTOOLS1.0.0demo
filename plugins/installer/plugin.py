@@ -52,15 +52,16 @@ class p(ptools.Plugin):
                 console.print('[red]>[/] ', end='')
                 answer = input()
                 # if answer if following pattern...
-                if answer == '*':
+                if answer.lower() == 'e':
+                    console.print('[white]You cancelled[/]')
                     break
                 else:
-                    if re.compile(r"""[A-Za-zА-Яа-яёЁ0-9]+\\[A-Za-zА-Яа-яёЁ0-9]+""").fullmatch(answer):
+                    if re.compile(r"""[A-Za-zА-Яа-яёЁ0-9_]+\\[A-Za-zА-Яа-яёЁ0-9_]+""").fullmatch(answer):
                         # if plugin is not downloaded...
                         repName = "ittoolplugin."+answer.split('\\')[1]
                         pluginName = answer.split('\\')[1]
                         developerName = answer.split('\\')[0]
-                        if not os.path.exists(f'plugins/{repName}'):
+                        if not os.path.exists(f'plugins/{pluginName}'):
                         
                             url = f"https://raw.githubusercontent.com/{developerName}/{repName}/main/info.json"
                             if self.network.networkConnectionCheck(url):
@@ -81,12 +82,13 @@ class p(ptools.Plugin):
                                 os.remove(f'plugins/{pluginName}/main.zip')
                                 console.print('[green]Succes')
                                 break
-                                
+
                             else:
                                 console.print('[red]Unknow rep or user name[/]')
                         else:
                             if os.path.exists(f'plugins/{pluginName}/info.json') and os.path.exists(f'plugins/{pluginName}/README.md') and os.path.exists(f'plugins/{pluginName}/plugin.py'):
-                                pass
+                                console.print('[white]This plugin is already installed![/]')
+
                             else:
                                 console.print('[red]Plugin is uncorrect! Reinstall it? (y/n)')
                                 while True:
@@ -100,10 +102,9 @@ class p(ptools.Plugin):
                                         break
                                     else:
                                         console.print('You have to answer y or n')
-                                    
+
                     else:
                         console.print('[red]Uncorrect format[/]')
-                
         else:
             console.print('[red]You have not network connection![/]')
 

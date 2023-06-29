@@ -7,12 +7,16 @@ import libs.ptools as ptools
 AppData = None
 console = Console()
 
-modulesNames = ('errors', 'sqlCoder')
+modulesNames = []
+NAME = <название>
 
 # Init fuction init AppData
 def init(data):
     global AppData
     AppData = data
+
+class NotAllModulesConnected(Exception): pass
+    
 
 class p(ptools.Plugin):
     def __init__(
@@ -21,3 +25,11 @@ class p(ptools.Plugin):
         modules: list = ...
     ) -> p:
         super().__init__(data, modules)
+        connectedModulesNames = [module.NAME for module in self.modules]
+        if connectedModulesNames == modulesNames:
+            self.errors.Functions.debug('Connected plugin {0}'.format(NAME))
+        else:
+            raise NotAllModulesConnected('Connected modules: {0} Not connected: {1}'.format(connectedModulesNames, modulesNames))
+        
+    def activate(self) -> bool:
+        self.errors.Functions.debug('Plugin {0} activated'.format(NAME))
