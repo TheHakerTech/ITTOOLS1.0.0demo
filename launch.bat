@@ -1,1 +1,1 @@
-python main.py
+sourse venv\Scripts\activate || venv\Scripts\activate && python main.py
