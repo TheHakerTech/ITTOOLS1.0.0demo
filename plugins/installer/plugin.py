@@ -5,6 +5,7 @@ import requests
 import os.path
 import zipfile
 import re
+import subprocess
 
 import os
 # Import system ptools
@@ -76,11 +77,16 @@ class p(ptools.Plugin):
                                 response = requests.get(f"https://raw.githubusercontent.com/{developerName}/{repName}/main/main.zip")
                                 with open(f'plugins/{pluginName}/main.zip', 'wb') as file:
                                     file.write(response.content)
+                                response = requests.get(f"https://raw.githubusercontent.com/{developerName}/{repName}/main/requirements.txt")
+                                with open(f'plugins/{pluginName}/requirements.txt', 'wb') as file:
+                                    file.write(response.content)
                                 # Unpack zip
                                 with zipfile.ZipFile(f'plugins/{pluginName}/main.zip', mode='a') as file:
                                     file.extractall(path=f'plugins/{pluginName}')
                                 os.remove(f'plugins/{pluginName}/main.zip')
-                                console.print('[green]Succes')
+                                output = subprocess.call(f"venv\Scripts\python.exe -m pip install -r plugins/{pluginName}/requirements.txt")
+                                if not output:
+                                    console.print('[green]Succes')
                                 break
 
                             else:

@@ -60,6 +60,9 @@ PLUGIN_TOOLS = 'Plugin tools'
 console = Console()
 
 
+def convert(x): return x.strip().lower()
+
+
 def printLogo():
     console.print('[cyan]Eternal Arts | All rights reserved[/]')
     console.print('[white]==============================================[/]')
@@ -156,13 +159,13 @@ class App(AppData):
         AppData.groups.print()
         while True:
             console.print(LVL1, end=' ')
-            answer = COMMAND_INPUT
-            if answer.lower() in list(AppData.groups.commands.keys()):
-                AppData.groups.commands[answer.lower()].invoke()
+            answer = convert(input())
+            if answer in list(AppData.groups.commands.keys()):
+                AppData.groups.commands[answer].invoke()
             else:
                 console.print('Unknow command')
                 err.Functions.error(
-                    'Unknow command {0}'.format(answer.lower()))
+                    'Unknow command {0}'.format(answer))
 
     # Commands fuctions
 
@@ -173,9 +176,9 @@ class App(AppData):
             '[white]Or type[/] [green]*[/] [white]to get instruction of all commands.[/]')
         while True:
             console.print(LVL2, end=' ')
-            answer = COMMAND_INPUT
-            if answer.lower() in list(AppData.groups.commands.keys()):
-                AppData.groups.commands[answer.lower()].print()
+            answer = convert(input())
+            if answer in list(AppData.groups.commands.keys()):
+                AppData.groups.commands[answer].print()
                 break
 
             elif answer == ALL:
@@ -189,17 +192,17 @@ class App(AppData):
 
             else:
                 err.Functions.error(
-                    'Unknow command {0}'.format(answer.lower()))
+                    'Unknow command {0}'.format(answer))
 
     def restart(self) -> None:
         console.print('[white]Are you sure to restart program? (y/n)[/]')
         while True:
             console.print(LVL2, end=' ')
-            answer = COMMAND_INPUT
-            if answer.lower() == YES:
+            answer = convert(input())
+            if answer == YES:
                 self.isUpdating = False
                 raise err.Restart()
-            elif answer.lower() == NOT:
+            elif answer == NOT:
                 err.Functions.debug('Cancelled operation')
                 console.print('You cancelled')
                 break
@@ -249,7 +252,7 @@ class App(AppData):
 
             else:
                 err.Functions.error(
-                    'Unknow plugin name {0}'.format(answer.lower()))
+                    'Unknow plugin name {0}'.format(answer))
 
     def activate(self) -> None:
         console.print(
@@ -330,11 +333,11 @@ class App(AppData):
             sql.updateDB()
             if answer in self.plugins.keys():
                 # Remove dir
-                shutil.rmtree(os.path.join('plugins', answer))
+                os.remove(f'plugins/{answer}')
                 console.print(
                     '[green]Succes removed[/] [red]{0}[/]'.format(self.plugins.pop(answer)))
                 break
-            elif answer.lower() == E:
+            elif answer == E:
                 console.print('You cancelled')
                 break
             else:
@@ -344,11 +347,11 @@ class App(AppData):
         console.print('[white]Are you sure to exit? (y/n)[/]')
         while True:
             console.print(LVL2, end=' ')
-            answer = COMMAND_INPUT
-            if answer.lower() == YES:
+            answer = convert(input())
+            if answer == YES:
                 self.isUpdating = False
                 raise err.Exit()
-            elif answer.lower() == NOT:
+            elif answer == NOT:
                 err.Functions.debug('Cancelled operation')
                 console.print('You cancelled')
                 break
