@@ -60,7 +60,7 @@ PLUGIN_TOOLS = 'Plugin tools'
 console = Console()
 
 
-def convert(x): return x.strip().lower()
+convert = lambda x: x.lower().strip()
 
 
 def printLogo():

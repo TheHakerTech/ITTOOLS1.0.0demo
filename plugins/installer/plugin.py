@@ -84,7 +84,7 @@ class p(ptools.Plugin):
                                 with zipfile.ZipFile(f'plugins/{pluginName}/main.zip', mode='a') as file:
                                     file.extractall(path=f'plugins/{pluginName}')
                                 os.remove(f'plugins/{pluginName}/main.zip')
-                                output = subprocess.call(f"venv\Scripts\python.exe -m pip install -r plugins/{pluginName}/requirements.txt")
+                                output = subprocess.call(fr"{os.getcwd()}\venv\Scripts\python.exe -m pip install -r plugins/{pluginName}/requirements.txt")
                                 if not output:
                                     console.print('[green]Succes')
                                 break
