@@ -60,7 +60,7 @@ PLUGIN_TOOLS = 'Plugin tools'
 console = Console()
 
 
-convert = lambda x: x.lower().strip()
+def convert(x): return x.lower().strip()
 
 
 def printLogo():
@@ -223,7 +223,7 @@ class App(AppData):
         plugins = {t[0]: (t[1], t[2]) for t in sql.getPluginsList()}
         while True:
             console.print(LVL2, end=' ')
-            answer = input()
+            answer = input().strip()
             if answer in plugins.keys():
                 console.print("{0} v{1} - {2}".format(answer,
                               plugins[answer][0], plugins[answer][1]))
@@ -260,7 +260,7 @@ class App(AppData):
         self.plugins = {t[0]: (t[1], t[2]) for t in sql.getPluginsList()}
         while True:
             console.print(LVL2, end=' ')
-            answer = input()
+            answer = input().strip()
             if answer in self.plugins.keys():
                 # Write that plugin activated
                 pinfo = json.loads(open(f'plugins/{answer}/info.json').read())
@@ -297,7 +297,7 @@ class App(AppData):
         plugins = {t[0]: (t[1], t[2]) for t in sql.getPluginsList()}
         while True:
             console.print(LVL2, end=' ')
-            answer = input()
+            answer = input().strip()
             if answer in plugins.keys():
                 if answer in self.activatedPlugins.keys():
                     pinfo = json.loads(
@@ -329,11 +329,11 @@ class App(AppData):
             '[white]Enter plugin name, which you need to remove[/] (e - cancel)')
         while True:
             console.print(LVL2, end='')
-            answer = input()
+            answer = input().strip()
             sql.updateDB()
             if answer in self.plugins.keys():
                 # Remove dir
-                os.remove(f'plugins/{answer}')
+                shutil.rmtree(f'plugins/{answer}')
                 console.print(
                     '[green]Succes removed[/] [red]{0}[/]'.format(self.plugins.pop(answer)))
                 break

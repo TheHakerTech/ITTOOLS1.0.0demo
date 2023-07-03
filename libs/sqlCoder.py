@@ -7,8 +7,10 @@ from libs.version import compareVersions
 AppData = None
 NAME = 'sqlCoder'
 
+
 def isPluginCorrect(path):
-    return True
+    if os.path.isdir(path):
+        return True
 
 
 def init(data):
@@ -21,7 +23,7 @@ def initTable(dbPath: str = 'data/pluginsInfoDB.db') -> None:
     with sqlite3.connect(dbPath) as con:
         cur = con.cursor()
         # Init sqlite table
-        cur.execute(r"""
+        cur.execute("""
         CREATE TABLE IF NOT EXISTS plugins (
             name TEXT,
             version TEXT,
@@ -35,7 +37,7 @@ def remove(name: str, dbPath: str = 'data/pluginsInfoDB.db') -> None:
     # Connect
     with sqlite3.connect(dbPath) as con:
         cur = con.cursor()
-        cur.execute(r"DELETE FROM plugins WHERE name=:name", {"name": name})
+        cur.execute("DELETE FROM plugins WHERE name=:name", {"name": name})
         # Close
         con.commit()
 
@@ -44,7 +46,7 @@ def insert(name: str, version: str, status: str, dbPath: str = 'data/pluginsInfo
     # Connect
     with sqlite3.connect(dbPath) as con:
         cur = con.cursor()
-        cur.execute(r"INSERT INTO plugins VALUES (:name, :version, :status)", {
+        cur.execute("INSERT INTO plugins VALUES (:name, :version, :status)", {
                     "name": name, "version": version, "status": status})
         con.commit()
 
@@ -53,7 +55,7 @@ def getPluginsList(dbPath: str = 'data/pluginsInfoDB.db') -> list:
     # Connect
     with sqlite3.connect(dbPath) as con:
         cur = con.cursor()
-        cur.execute(r"SELECT * FROM plugins")
+        cur.execute("SELECT * FROM plugins")
         response = cur.fetchall()
         con.commit()
         return response
@@ -63,7 +65,7 @@ def getVersion(name: str, dbPath: str = 'data/pluginsInfoDB.db') -> str:
     # Connect
     with sqlite3.connect(dbPath) as con:
         cur = con.cursor()
-        cur.execute(r'SELECT (version) FROM plugins WHERE name=:name',
+        cur.execute('SELECT (version) FROM plugins WHERE name=:name',
                     {"name": name})
         response = cur.fetchall()
         if response != []:
@@ -75,7 +77,7 @@ def getStatus(name: str, dbPath: str = 'data/pluginsInfoDB.db') -> str:
     # Connect
     with sqlite3.connect(dbPath) as con:
         cur = con.cursor()
-        cur.execute(r'SELECT (status) FROM plugins WHERE name=:name',
+        cur.execute('SELECT (status) FROM plugins WHERE name=:name',
                     {"name": name})
         response = cur.fetchall()
         if response != []:
@@ -89,9 +91,9 @@ def updateDB(dbPath: str = 'data/pluginsInfoDB.db') -> None:
     with sqlite3.connect(dbPath) as con:
         cur = con.cursor()
         # Drop table
-        cur.execute(r"DROP TABLE plugins")
+        cur.execute("DROP TABLE plugins")
         # Reinit it
-        cur.execute(r"""
+        cur.execute("""
         CREATE TABLE IF NOT EXISTS plugins (
             name TEXT,
             version TEXT,
@@ -104,5 +106,5 @@ def updateDB(dbPath: str = 'data/pluginsInfoDB.db') -> None:
             if isPluginCorrect(folderPath):
                 d = json.loads(open(folderPath+'/info.json').read())
                 cur.execute(
-                    r"INSERT INTO plugins VALUES (:name, :version, :status)", d)
+                    "INSERT INTO plugins VALUES (:name, :version, :status)", d)
         con.commit()

@@ -6,6 +6,7 @@ import os.path
 import zipfile
 import re
 import subprocess
+import shutil
 
 import os
 # Import system ptools
@@ -18,12 +19,16 @@ modulesNames = ['errors', 'commandManager', 'network']
 NAME = 'installer'
 
 # Init fuction init AppData
+
+
 def init(data):
     global AppData
     AppData = data
 
-class NotAllModulesConnected(Exception): pass
-    
+
+class NotAllModulesConnected(Exception):
+    pass
+
 
 class p(ptools.Plugin):
     def __init__(
@@ -36,12 +41,14 @@ class p(ptools.Plugin):
         if connectedModulesNames == modulesNames:
             self.errors.Functions.debug('Connected plugin {0}'.format(NAME))
         else:
-            raise NotAllModulesConnected('Connected modules: {0} Not connected: {1}'.format(connectedModulesNames, modulesNames))
-        
+            raise NotAllModulesConnected('Connected modules: {0} Not connected: {1}'.format(
+                connectedModulesNames, modulesNames))
+
     def activate(self) -> bool:
         self.errors.Functions.debug('Plugin {0} activated'.format(NAME))
 
-        AppData.groups.list['System tools'].addCommand([self.commandManager.Command('download', self.download, 'Download plugin')])
+        AppData.groups.list['System tools'].addCommand(
+            [self.commandManager.Command('download', self.download, 'Download plugin')])
         AppData.groups.update()
 
     def download(self) -> bool:
@@ -49,9 +56,10 @@ class p(ptools.Plugin):
         # Cheack network connection
         if self.network.networkCheck():
             while True:
-                console.print('[white]Enter <developer_name_on_github>\<plugin_name> (e - cancel)')
-                console.print('[red]>[/] ', end='')
-                answer = input()
+                console.print(
+                    '[white]Enter <developer_name_on_github>\<plugin_name> (e - cancel)')
+                console.print('[green]>>[/] ', end='')
+                answer = input().strip()
                 # if answer if following pattern...
                 if answer.lower() == 'e':
                     console.print('[white]You cancelled[/]')
@@ -63,7 +71,7 @@ class p(ptools.Plugin):
                         pluginName = answer.split('\\')[1]
                         developerName = answer.split('\\')[0]
                         if not os.path.exists(f'plugins/{pluginName}'):
-                        
+
                             url = f"https://raw.githubusercontent.com/{developerName}/{repName}/main/info.json"
                             if self.network.networkConnectionCheck(url):
                                 os.mkdir(f'plugins/{pluginName}')
@@ -71,48 +79,85 @@ class p(ptools.Plugin):
                                 response = requests.get(url)
                                 with open(f'plugins/{pluginName}/info.json', 'wb') as file:
                                     file.write(response.content)
-                                response = requests.get(f"https://raw.githubusercontent.com/{developerName}/{repName}/main/README.md")
+                                response = requests.get(
+                                    f"https://raw.githubusercontent.com/{developerName}/{repName}/main/README.md")
                                 with open(f'plugins/{pluginName}/README.md', 'wb') as file:
                                     file.write(response.content)
-                                response = requests.get(f"https://raw.githubusercontent.com/{developerName}/{repName}/main/main.zip")
+                                response = requests.get(
+                                    f"https://raw.githubusercontent.com/{developerName}/{repName}/main/main.zip")
                                 with open(f'plugins/{pluginName}/main.zip', 'wb') as file:
                                     file.write(response.content)
-                                response = requests.get(f"https://raw.githubusercontent.com/{developerName}/{repName}/main/requirements.txt")
-                                with open(f'plugins/{pluginName}/requirements.txt', 'wb') as file:
-                                    file.write(response.content)
+                                try:
+                                    response = requests.get(
+                                        f"https://raw.githubusercontent.com/{developerName}/{repName}/main/requirements.txt")
+                                    with open(f'plugins/{pluginName}/requirements.txt', 'wb') as file:
+                                        file.write(response.content)
+                                except:
+                                    pass
                                 # Unpack zip
                                 with zipfile.ZipFile(f'plugins/{pluginName}/main.zip', mode='a') as file:
-                                    file.extractall(path=f'plugins/{pluginName}')
+                                    file.extractall(
+                                        path=f'plugins/{pluginName}')
                                 os.remove(f'plugins/{pluginName}/main.zip')
-                                output = subprocess.call(fr"{os.getcwd()}\venv\Scripts\python.exe -m pip install -r plugins/{pluginName}/requirements.txt")
-                                if not output:
-                                    console.print('[green]Succes')
+                                console.print('[green]Succes')
                                 break
 
                             else:
-                                console.print('[red]Unknow rep or user name[/]')
+                                console.print(
+                                    '[red]Unknow rep or user name[/]')
                         else:
-                            if os.path.exists(f'plugins/{pluginName}/info.json') and os.path.exists(f'plugins/{pluginName}/README.md') and os.path.exists(f'plugins/{pluginName}/plugin.py'):
-                                console.print('[white]This plugin is already installed![/]')
+                            if os.path.exists(f'plugins/{pluginName}/info.json') and os.path.exists(f'plugins/{pluginName}/README.md') and (os.path.exists(f'plugins/{pluginName}/plugin.py') or os.path.exists(f'plugins/{pluginName}/plugin.pyd')):
+                                console.print(
+                                    '[white]This plugin is already installed![/]')
 
                             else:
-                                console.print('[red]Plugin is uncorrect! Reinstall it? (y/n)')
+                                console.print(
+                                    '[red]Plugin is uncorrect! Reinstall it? (y/n)')
                                 while True:
-                                    console.print('[red]>[/] ', end=' ')
-                                    answer = input()
+                                    console.print('[green]]>>[/] ', end=' ')
+                                    answer = input().strip()
                                     if answer.lower() == 'y':
                                         # Reinstall
-                                        pass
+                                        shutil.rmtree(f'plugins/{pluginName}')
+                                        url = f"https://raw.githubusercontent.com/{developerName}/{repName}/main/info.json"
+                                        if self.network.networkConnectionCheck(url):
+                                            os.mkdir(f'plugins/{pluginName}')
+                                            # read info.json
+                                            response = requests.get(url)
+                                            with open(f'plugins/{pluginName}/info.json', 'wb') as file:
+                                                file.write(response.content)
+                                            response = requests.get(
+                                                f"https://raw.githubusercontent.com/{developerName}/{repName}/main/README.md")
+                                            with open(f'plugins/{pluginName}/README.md', 'wb') as file:
+                                                file.write(response.content)
+                                            response = requests.get(
+                                                f"https://raw.githubusercontent.com/{developerName}/{repName}/main/main.zip")
+                                            with open(f'plugins/{pluginName}/main.zip', 'wb') as file:
+                                                file.write(response.content)
+                                            try:
+                                                response = requests.get(
+                                                    f"https://raw.githubusercontent.com/{developerName}/{repName}/main/requirements.txt")
+                                                with open(f'plugins/{pluginName}/requirements.txt', 'wb') as file:
+                                                    file.write(
+                                                        response.content)
+                                            except:
+                                                pass
+                                            # Unpack zip
+                                            with zipfile.ZipFile(f'plugins/{pluginName}/main.zip', mode='a') as file:
+                                                file.extractall(
+                                                    path=f'plugins/{pluginName}')
+                                            os.remove(
+                                                f'plugins/{pluginName}/main.zip')
+                                            console.print('[green]Succes')
+                                            break
                                     elif answer.lower() == 'n':
                                         console.print('You cancelled')
                                         break
                                     else:
-                                        console.print('You have to answer y or n')
+                                        console.print(
+                                            'You have to answer y or n')
 
                     else:
                         console.print('[red]Uncorrect format[/]')
         else:
             console.print('[red]You have not network connection![/]')
-
-
-
